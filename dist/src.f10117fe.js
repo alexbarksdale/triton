@@ -147,6 +147,14 @@ function () {
     this.events[eventName] = handlers;
   };
 
+  User.prototype.trigger = function (eventName) {
+    var handlers = this.events[eventName];
+    if (!handlers || handlers.length === 0) return;
+    handlers.forEach(function (callback) {
+      return callback();
+    });
+  };
+
   return User;
 }();
 
@@ -164,7 +172,10 @@ var user = new User_1.User({
   name: 'User',
   age: 20
 });
-user.on('change', function () {});
+user.on('change', function () {
+  console.log('Fired');
+});
+user.trigger('change');
 console.log(user);
 },{"./models/User":"src/models/User.ts"}],"../../../../../usr/local/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
