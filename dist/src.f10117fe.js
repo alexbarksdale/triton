@@ -117,7 +117,40 @@ parcelRequire = (function (modules, cache, entry, globalName) {
   }
 
   return newRequire;
-})({"node_modules/axios/lib/helpers/bind.js":[function(require,module,exports) {
+})({"src/models/Eventing.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var Eventing =
+/** @class */
+function () {
+  function Eventing() {
+    this.events = {};
+  }
+
+  Eventing.prototype.on = function (eventName, callback) {
+    // if the event at eventName doesn't exist handlers = []
+    var handlers = this.events[eventName] || [];
+    handlers.push(callback);
+    this.events[eventName] = handlers;
+  };
+
+  Eventing.prototype.trigger = function (eventName) {
+    var handlers = this.events[eventName];
+    if (!handlers || handlers.length === 0) return;
+    handlers.forEach(function (callback) {
+      return callback();
+    });
+  };
+
+  return Eventing;
+}();
+
+exports.Eventing = Eventing;
+},{}],"node_modules/axios/lib/helpers/bind.js":[function(require,module,exports) {
 'use strict';
 
 module.exports = function bind(fn, thisArg) {
@@ -1880,7 +1913,7 @@ module.exports.default = axios;
 
 },{"./utils":"node_modules/axios/lib/utils.js","./helpers/bind":"node_modules/axios/lib/helpers/bind.js","./core/Axios":"node_modules/axios/lib/core/Axios.js","./core/mergeConfig":"node_modules/axios/lib/core/mergeConfig.js","./defaults":"node_modules/axios/lib/defaults.js","./cancel/Cancel":"node_modules/axios/lib/cancel/Cancel.js","./cancel/CancelToken":"node_modules/axios/lib/cancel/CancelToken.js","./cancel/isCancel":"node_modules/axios/lib/cancel/isCancel.js","./helpers/spread":"node_modules/axios/lib/helpers/spread.js"}],"node_modules/axios/index.js":[function(require,module,exports) {
 module.exports = require('./lib/axios');
-},{"./lib/axios":"node_modules/axios/lib/axios.js"}],"src/apis/triton.ts":[function(require,module,exports) {
+},{"./lib/axios":"node_modules/axios/lib/axios.js"}],"src/models/Sync.ts":[function(require,module,exports) {
 "use strict";
 
 var __importDefault = this && this.__importDefault || function (mod) {
@@ -1895,30 +1928,51 @@ Object.defineProperty(exports, "__esModule", {
 
 var axios_1 = __importDefault(require("axios"));
 
-exports.default = axios_1.default.create({
-  baseURL: 'http://localhost:3000'
-});
+var Sync =
+/** @class */
+function () {
+  function Sync(rootUrl) {
+    this.rootUrl = rootUrl;
+  }
+
+  Sync.prototype.fetch = function (id) {
+    return axios_1.default.get(this.rootUrl + "/" + id);
+  };
+
+  Sync.prototype.save = function (data) {
+    var id = data.id;
+
+    if (id) {
+      return axios_1.default.put(this.rootUrl + "/" + id, data);
+    } else {
+      return axios_1.default.post(this.rootUrl, data);
+    }
+  };
+
+  return Sync;
+}();
+
+exports.Sync = Sync;
 },{"axios":"node_modules/axios/index.js"}],"src/models/User.ts":[function(require,module,exports) {
 "use strict";
-
-var __importDefault = this && this.__importDefault || function (mod) {
-  return mod && mod.__esModule ? mod : {
-    "default": mod
-  };
-};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var triton_1 = __importDefault(require("../apis/triton"));
+var Eventing_1 = require("./Eventing");
+
+var Sync_1 = require("./Sync");
+
+var ROOT_URL = 'http://localhost:3000/users';
 
 var User =
 /** @class */
 function () {
   function User(data) {
     this.data = data;
-    this.events = {};
+    this.events = new Eventing_1.Eventing();
+    this.sync = new Sync_1.Sync(ROOT_URL);
   }
 
   User.prototype.get = function (propName) {
@@ -1928,51 +1982,12 @@ function () {
   User.prototype.set = function (update) {
     Object.assign(this.data, update);
   };
-  /* EVENTING-SYSTEM */
-
-
-  User.prototype.on = function (eventName, callback) {
-    // if the event at eventName doesn't exist handlers = []
-    var handlers = this.events[eventName] || [];
-    handlers.push(callback);
-    this.events[eventName] = handlers;
-  };
-
-  User.prototype.trigger = function (eventName) {
-    var handlers = this.events[eventName];
-    if (!handlers || handlers.length === 0) return;
-    handlers.forEach(function (callback) {
-      return callback();
-    });
-  };
-  /* END EVENTING-SYSTEM */
-
-
-  User.prototype.fetch = function () {
-    var _this = this;
-
-    triton_1.default.get("/users/" + this.get('id')).then(function (res) {
-      _this.set(res.data);
-    }).catch(function (err) {
-      return console.log(err);
-    });
-  };
-
-  User.prototype.save = function () {
-    var id = this.get('id');
-
-    if (id) {
-      triton_1.default.put("/users/" + id, this.data);
-    } else {
-      triton_1.default.post('/users', this.data);
-    }
-  };
 
   return User;
 }();
 
 exports.User = User;
-},{"../apis/triton":"src/apis/triton.ts"}],"src/index.ts":[function(require,module,exports) {
+},{"./Eventing":"src/models/Eventing.ts","./Sync":"src/models/Sync.ts"}],"src/index.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1985,7 +2000,6 @@ var user = new User_1.User({
   name: 'new record',
   age: 0
 });
-user.save();
 },{"./models/User":"src/models/User.ts"}],"../../../../../usr/local/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
@@ -2014,7 +2028,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "54998" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "63928" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
