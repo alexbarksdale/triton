@@ -128,27 +128,34 @@ var UserForm =
 /** @class */
 function () {
   function UserForm(parent, model) {
+    var _this = this;
+
     this.parent = parent;
     this.model = model;
+
+    this.onSetAgeClick = function () {
+      _this.model.setRandomAge();
+    };
+
+    this.bindModal();
   }
+
+  UserForm.prototype.bindModal = function () {
+    var _this = this;
+
+    this.model.on('change', function () {
+      _this.render();
+    });
+  };
 
   UserForm.prototype.eventsMap = function () {
     return {
-      'click:button': this.onButtonClick,
-      'mouseenter:h1': this.onHeaderHover
+      'click:#set-age': this.onSetAgeClick
     };
   };
 
-  UserForm.prototype.onHeaderHover = function () {
-    console.log('H1 hover');
-  };
-
-  UserForm.prototype.onButtonClick = function () {
-    console.log('test');
-  };
-
   UserForm.prototype.template = function () {
-    return "\n            <div>\n                <h1>User Form</h1>\n                <div>User name: " + this.model.get('name') + " </div>\n                <div>User age: " + this.model.get('age') + " </div>\n                <input/>\n                <button>Click Me</button>\n            </div>\n        ";
+    return "\n            <div>\n                <h1>User Form</h1>\n                <div>User name: " + this.model.get('name') + " </div>\n                <div>User age: " + this.model.get('age') + " </div>\n                <input/>\n                <button>Click Me</button>\n                <button id=\"set-age\">Random Age</button>\n            </div>\n        ";
   };
 
   UserForm.prototype.bindEvents = function (fragment) {
@@ -170,6 +177,7 @@ function () {
   };
 
   UserForm.prototype.render = function () {
+    this.parent.innerHTML = '';
     var templateElement = document.createElement('template');
     templateElement.innerHTML = this.template();
     this.bindEvents(templateElement.content);
@@ -2242,6 +2250,13 @@ function (_super) {
     });
   };
 
+  User.prototype.setRandomAge = function () {
+    var age = Math.round(Math.random() * 100);
+    this.set({
+      age: age
+    });
+  };
+
   return User;
 }(Model_1.Model);
 
@@ -2291,7 +2306,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "63630" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51852" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
